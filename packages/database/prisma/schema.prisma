@@ -49,7 +49,9 @@ model User {
   photos        Photo[]
   preferences   Preference?
   likes         Like[]    @relation("Liker")
+  likedBy       Like[]    @relation("Likee")
   passes        Pass[]    @relation("Passer")
+  passedBy      Pass[]    @relation("Passe")
   matchesAsUser1 Match[]  @relation("User1Matches")
   matchesAsUser2 Match[]  @relation("User2Matches")
   blocks        Block[]   @relation("Blocker")

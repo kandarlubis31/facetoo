@@ -18,7 +18,7 @@ async function main() {
   await registerPlugins(app);
 
   // Register routes
-  await registerRoutes(app);
+  registerRoutes(app);
 
   try {
     await app.listen({ port: env.PORT, host: '0.0.0.0' });
@@ -30,4 +30,4 @@ async function main() {
   }
 }
 
-main();
+void main();

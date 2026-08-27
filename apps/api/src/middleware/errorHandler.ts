@@ -1,4 +1,4 @@
-import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
 
@@ -20,7 +20,7 @@ export function errorHandler(error: FastifyError, request: FastifyRequest, reply
   // Prisma errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2002') {
-      const target = error.meta?.target as string[] | undefined;
+      const target = error.meta?.['target'] as string[] | undefined;
       return reply.code(409).send({
         success: false,
         error: {

@@ -6,7 +6,7 @@
     "dev:api": "pnpm --filter @vybe/api dev",
     "build:api": "pnpm --filter @vybe/api build",
     "start:api": "pnpm --filter @vybe/api start",
-    "lint": "pnpm -r exec eslint .",
+    "lint": "pnpm --filter @vybe/api lint && pnpm --filter @vybe/shared lint && pnpm --filter @vybe/database lint",
     "format": "pnpm -r exec prettier --write .",
     "db:generate": "pnpm --filter @vybe/database prisma generate",
     "db:push": "pnpm --filter @vybe/database prisma db push",
