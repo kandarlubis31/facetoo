@@ -25,6 +25,7 @@
     "@vybe/shared": "workspace:*",
     "argon2": "^0.40.0",
     "fastify": "^4.25.0",
+    "fastify-type-provider-zod": "^7.0.0",
     "fastify-zod": "^1.4.0",
     "zod": "^3.22.4"
   },

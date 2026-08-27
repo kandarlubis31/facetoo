@@ -7,6 +7,23 @@ import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
 import { env } from '../utils/env.js';
 
+// Extend the FastifyRequest user type from fastify-jwt
+declare module '@fastify/jwt' {
+  interface FastifyJWT {
+    user: {
+      userId: string;
+      email: string;
+    };
+  }
+}
+
+// Declare the authenticate decorator
+declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+  }
+}
+
 export async function registerPlugins(app: FastifyInstance) {
   // CORS
   await app.register(cors, {
