@@ -422,4 +422,150 @@ export async function interactionRoutes(app: FastifyInstance) {
 
     return reply.send({ success: true });
   });
+
+  // POST /users/:id/block - block a user
+  typedApp.post<{ Params: UserIdParam }>('/users/:id/block', {
+    preHandler: [app.authenticate],
+    schema: {
+      params: UserIdParamSchema,
+      response: {
+        200: { type: 'object', properties: { success: { type: 'boolean' } } },
+        400: { $ref: 'ErrorResponse#' },
+        401: { $ref: 'ErrorResponse#' },
+        404: { $ref: 'ErrorResponse#' },
+        409: { $ref: 'ErrorResponse#' },
+      },
+    },
+  }, async (request, reply) => {
+    const currentUserId = request.user!.userId;
+    const { id: targetUserId } = request.params as { id: string };
+
+    // Cannot block yourself
+    if (targetUserId === currentUserId) {
+      return reply.code(400).send({
+        success: false,
+        error: { code: 'INVALID_ACTION', message: 'Cannot block yourself' },
+      });
+    }
+
+    // Check if target user exists
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!targetUser) {
+      return reply.code(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'User not found' },
+      });
+    }
+
+    // Check if already blocked
+    const existingBlock = await prisma.block.findUnique({
+      where: { blockerId_blockedId: { blockerId: currentUserId, blockedId: targetUserId } },
+    });
+
+    if (existingBlock) {
+      return reply.code(409).send({
+        success: false,
+        error: { code: 'ALREADY_BLOCKED', message: 'Already blocked this user' },
+      });
+    }
+
+    // Create block (bidirectional - also remove any existing likes/passes/matches)
+    await prisma.$transaction(async (tx) => {
+      // Create block
+      await tx.block.create({
+        data: { blockerId: currentUserId, blockedId: targetUserId },
+      });
+
+      // Remove any existing likes between them
+      await tx.like.deleteMany({
+        where: {
+          OR: [
+            { fromUserId: currentUserId, toUserId: targetUserId },
+            { fromUserId: targetUserId, toUserId: currentUserId },
+          ],
+        },
+      });
+
+      // Remove any existing passes between them
+      await tx.pass.deleteMany({
+        where: {
+          OR: [
+            { fromUserId: currentUserId, toUserId: targetUserId },
+            { fromUserId: targetUserId, toUserId: currentUserId },
+          ],
+        },
+      });
+
+      // Deactivate any existing match
+      await tx.match.updateMany({
+        where: {
+          OR: [
+            { user1Id: currentUserId, user2Id: targetUserId },
+            { user1Id: targetUserId, user2Id: currentUserId },
+          ],
+          isActive: true,
+        },
+        data: { isActive: false },
+      });
+    });
+
+    return reply.send({ success: true });
+  });
+
+  // POST /users/:id/report - report a user
+  typedApp.post<{ Params: UserIdParam }>('/users/:id/report', {
+    preHandler: [app.authenticate],
+    schema: {
+      params: UserIdParamSchema,
+      body: z.object({
+        reason: z.string().min(5).max(100),
+        description: z.string().max(1000).optional(),
+      }),
+      response: {
+        200: { type: 'object', properties: { success: { type: 'boolean' } } },
+        400: { $ref: 'ErrorResponse#' },
+        401: { $ref: 'ErrorResponse#' },
+        404: { $ref: 'ErrorResponse#' },
+      },
+    },
+  }, async (request, reply) => {
+    const currentUserId = request.user!.userId;
+    const { id: targetUserId } = request.params as { id: string };
+    const { reason, description } = request.body as { reason: string; description?: string };
+
+    // Cannot report yourself
+    if (targetUserId === currentUserId) {
+      return reply.code(400).send({
+        success: false,
+        error: { code: 'INVALID_ACTION', message: 'Cannot report yourself' },
+      });
+    }
+
+    // Check if target user exists
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!targetUser) {
+      return reply.code(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'User not found' },
+      });
+    }
+
+    // Create report
+    await prisma.report.create({
+      data: {
+        reporterId: currentUserId,
+        reportedId: targetUserId,
+        reason,
+        description,
+      },
+    });
+
+    return reply.send({ success: true });
+  });
 }
