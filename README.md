@@ -69,6 +69,16 @@ Swagger docs at `http://localhost:3000/docs`
 - **Web**: Next.js, TypeScript, PWA
 - **Infrastructure**: Docker Compose, PostgreSQL, Redis, Cloudflare R2
 
+---
+
+## Bahasa Indonesia
+
+**VYBE** adalah platform kencan yang mengutamakan ketertarikan fisik sebagai titik awal perkenalan.
+
+Repositori ini berisi aplikasi Node.js dengan struktur `apps/` dan Prisma sebagai lapisan basis data.
+
+---
+
 ## License
 
 Private
